@@ -1,0 +1,53 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/examp.css' %}">
+
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Транспортные корабли ледового класса</title>
+</head>
+<body>
+
+  <header class="header">
+    <a href="{% url 'home' %}" class="home-button">
+      <img src="http://127.0.0.1:9000/image/home.png" alt="Home">
+    </a>
+  </header>
+
+  <div class="uheader">
+    <div class="header-title">Транспортные корабли ледового класса</div>
+    <div class="file-button">
+      <a href="{% url 'request' draft_request.id %}">
+        <img src="http://127.0.0.1:9000/image/folder.png" alt="Files">
+        <span class="file-counter">{{ draft_request_count }}</span>
+    </a>
+    </div>
+  </div>
+
+  <div class="search-container">
+    <form method="GET" action="{% url 'search_ships' %}">
+      <input type="text" name="query" placeholder="Найти" class="search-box">
+      <button type="submit" class="search-button">Найти</button>
+    </form>
+  </div>
+
+  <main class="ship-list">
+    {% for ship in data.ships %}
+      <div class="ship-card">
+        <img src="{{ ship.image }}" alt="Танкер" class="ship-image">
+        <div class="ship-info">
+          <h3>{{ ship.title }}</h3>
+          <p>Год изготовления: {{ ship.year }}</p>
+          <button class="details-button" onclick="window.location.href='{% url 'ship_detail' ship.id %}'">Подробнее</button>
+
+        </div>
+      </div>
+    {% empty %}
+      <p>Нет результатов для "{{ request.GET.query }}".</p>
+    {% endfor %}
+  </main>
+
+</body>
+</html>
