@@ -38,21 +38,20 @@ body {
     flex-direction: column;
     background-color: white;
     border-radius: 10px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     padding: 30px;
-    width: 60%; /* Увеличена ширина для большего пространства */
+    width: 70%; 
     max-width: 1000px;
 }
 
 .ship-title {
     font-size: 32px;
     margin-bottom: 20px;
-    text-align: left; /* Выравниваем заголовок по левому краю */
+    text-align: left; 
 }
 
 .ship-image-info {
     display: flex;
-    flex-direction: row; /* Размещаем изображение и текст по горизонтали */
+    flex-direction: row; 
     width: 100%;
     align-items: flex-start;
 }

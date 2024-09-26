@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <!-- Header с иконкой "дом" -->
+
   <header class="header">
     <div class="home-icon home-button">
       <a href="{% url 'home' %}">
@@ -20,7 +20,7 @@
 
   <div class="ship-detail-container">
     <div class="ship-card">
-      <!-- Заголовок внутри ship-card, над изображением и выровнен влево -->
+
       <h1 class="ship-title">{{ ship.title }}</h1>
       
       <div class="ship-image-info">
@@ -28,6 +28,7 @@
         <div class="ship-info">
           <p> {{ ship.description }}</p>
           <p>Год изготовления: {{ ship.year }}</p>
+          <p>Ледовый класс: {{ ship.ice_class }}</p>
           <p>Длина: {{ ship.length }} м</p>
           <p>Двигатель: {{ ship.engine }}</p>
         </div>

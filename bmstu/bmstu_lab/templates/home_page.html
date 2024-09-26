@@ -17,37 +17,38 @@
   </header>
 
   <div class="uheader">
-    <div class="header-title">Транспортные корабли ледового класса</div>
+    <div class="header-title"><strong>Транспортные корабли ледового класса</strong></div>
     <div class="file-button">
-      <a href="{% url 'request' draft_request.id %}">
+      <a href="{% url 'icebreaker' draft_icebreaker.id %}">
         <img src="http://127.0.0.1:9000/image/folder.png" alt="Files">
-        <span class="file-counter">{{ draft_request_count }}</span>
+        <span class="file-counter">{{ draft_icebreaker_count }}</span>
     </a>
     </div>
   </div>
 
   <div class="search-container">
-    <form method="GET" action="{% url 'search_ships' %}">
-      <input type="text" name="query" placeholder="Найти" class="search-box">
+    <form method="GET" action="{% url 'home' %}">
+      <input type="text" name="title" placeholder="Найти" class="search-box" value="{{ title }}">
       <button type="submit" class="search-button">Найти</button>
     </form>
   </div>
 
   <main class="ship-list">
-    {% for ship in data.ships %}
+    {% for ship in ships %}
       <div class="ship-card">
-        <img src="{{ ship.image }}" alt="Танкер" class="ship-image">
+        <img src="{{ ship.image }}" alt="{{ ship.title }}" class="ship-image">
         <div class="ship-info">
           <h3>{{ ship.title }}</h3>
           <p>Год изготовления: {{ ship.year }}</p>
-          <button class="details-button" onclick="window.location.href='{% url 'ship_detail' ship.id %}'">Подробнее</button>
-
+          <p>Ледовый класс: {{ ship.ice_class }}</p>
+          <button class="details-button" onclick="window.location.href='{% url 'ship' ship.id %}'">Подробнее</button>
         </div>
       </div>
     {% empty %}
-      <p>Нет результатов для "{{ request.GET.query }}".</p>
+      <p>Нет результатов для "{{ request.GET.title }}".</p>
     {% endfor %}
   </main>
+  
 
 </body>
 </html>
