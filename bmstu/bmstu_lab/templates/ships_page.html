@@ -19,10 +19,7 @@
   <div class="uheader">
     <div class="header-title"><strong>Транспортные корабли ледового класса</strong></div>
     <div class="file-button">
-      <a href="{% url 'icebreaker' draft_icebreaker.id %}">
-        <img src="http://127.0.0.1:9000/image/folder.png" alt="Files">
-        <span class="file-counter">{{ draft_icebreaker_count }}</span>
-    </a>
+      {% include "bin.html" %}
     </div>
   </div>
 
@@ -35,17 +32,9 @@
 
   <main class="ship-list">
     {% for ship in ships %}
-      <div class="ship-card">
-        <img src="{{ ship.image }}" alt="{{ ship.title }}" class="ship-image">
-        <div class="ship-info">
-          <h3>{{ ship.title }}</h3>
-          <p>Год изготовления: {{ ship.year }}</p>
-          <p>Ледовый класс: {{ ship.ice_class }}</p>
-          <button class="details-button" onclick="window.location.href='{% url 'ship' ship.id %}'">Подробнее</button>
-        </div>
-      </div>
-    {% empty %}
-      <p>Нет результатов для "{{ request.GET.title }}".</p>
+      
+
+      {% include "ship_card.html" %}
     {% endfor %}
   </main>
   

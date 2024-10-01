@@ -5,6 +5,29 @@ body {
     background-color: white;
 }
 
+.delete-draft-lecture-btn {
+    padding: 10px 20px;
+    background-color: #dc3545; /* Красный цвет */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.delete-draft-lecture-btn:hover {
+    background-color: #c82333; /* Более тёмный красный при наведении */
+}
+
+.centered-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* Чтобы занимать всю ширину родителя */
+    margin-top: 10px;
+}
+
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -23,6 +46,12 @@ body {
 
 .home-button img {
     height: 19px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px; /* Отступ между кнопками */
+    margin-top: 10px; /* Отступ сверху для разделения от текста */
 }
 
 .request-container {

@@ -6,8 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Составление заявки</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'css/examp.css' %}">
-  <link rel="stylesheet" type="text/css" href="{% static 'css/request.css' %}?v={% now 'U' %}"> 
+  <link rel="stylesheet" type="text/css" href="{% static 'css/request.css' %}"> 
 </head>
 <body>
 
@@ -22,40 +21,49 @@
   <div class="request-container">
     <h1>Составление заявки на проводку ледоколом</h1>
 
+    <!-- Форма для выбора данных -->
     <form method="POST">
       {% csrf_token %}
       <div class="info">
-      <div class="input-group">
-        <label for="start-point">Дата:</label>
-        <input class="form-control" type="date" id="date" value="{{ draft_icebreaker.date|date:'Y-m-d' }}" name="date" required >
+        <div class="input-group">
+          <label for="start-point">Дата:</label>
+          {% if icebreaker.date %}
+              <input class="form-control" type="date" id="date" value="{{ icebreaker.date|date:'Y-m-d' }}" name="date" required>
+          {% else %}
+              <input class="form-control" type="date" id="date" name="date" required>
+          {% endif %}
+        </div>
+
+        <div class="input-group">
+          <label for="start-point">Начальная точка проводки:</label>
+          {% if icebreaker.start_point %}
+          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" value="{{ icebreaker.start_point }}" required>
+          {% else %}
+          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" required>
+          {% endif %}
+        </div>
+
+        <div class="input-group">
+          <label for="end-point">Конечная точка проводки:</label>
+          {% if icebreaker.finish_point %}
+          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" value="{{ icebreaker.finish_point }}" required>
+          {% else %}
+          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" required>
+          {% endif %}
+        </div>
+
+        <!-- Кнопка для удаления заявки -->
+        <div class="centered-button">
+          <button class="btn delete-draft-lecture-btn" type="submit" formaction="{% url 'delete_icebreaker' icebreaker.id %}">Удалить</button>
+        </div>
+
       </div>
-      <div class="input-group">
-        <label for="start-point">Начальная точка проводки:</label>
-        <input class="form-control" type="text" id="start-point" placeholder="Выбрать начальную точку проводки" value="{{ draft_icebreaker.start_point }}" name="start_point" required >
-      </div>
-      <div class="input-group">
-        <label for="end-point">Конечная точка проводки:</label>
-        <input class="form-control" type="text" id="end-point" placeholder="Выбрать конечную точку проводки" value="{{ draft_icebreaker.finish_point }}" name="end_point" required>
-      </div>
-      </div>
-      <!--<button type="submit" class="submit-button">Отправить заявку</button>-->
     </form>
 
     <h2>Корабли в заявке</h2>
     <div class="ship-list">
-      {% for ship in ships %}
-      <div class="ship-card">
-        <img src="{{ ship.image }}" alt="{{ ship.title }}" class="ship-image">
-        <div class="ship-info">
-          <h3>{{ ship.title }}</h3>
-          <!--<p>Год изготовления: {{ ship.year }}</p>-->
-          <div class="comment-group">
-            <label for="comment-{{ ship.id }}">Позиция:</label>
-            <input type="text" id="comment-{{ ship.id }}" name="comment-{{ ship.id }}" placeholder="Введите порядок" class="comment-input" value="{{ ship.order }}">
-          </div>
-          <!-- <button class="details-button" onclick="window.location.href='{% url 'ship' ship.id %}'">Подробнее</button> -->
-        </div>
-      </div>
+      {% for ship in icebreaker.get_ships %}
+      {% include "ship_card.html" %}
       {% endfor %}
     </div>
   </div>

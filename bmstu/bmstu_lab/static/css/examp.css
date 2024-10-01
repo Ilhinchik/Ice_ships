@@ -5,6 +5,12 @@ body {
     background-color: white;
 }
 
+.button-group {
+    display: flex;
+    gap: 10px; /* Отступ между кнопками */
+}
+
+
 .header {
     display: flex;
     justify-content: space-between;

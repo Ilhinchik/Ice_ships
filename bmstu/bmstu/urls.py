@@ -17,9 +17,13 @@ Including another URLconf
 
 from django.urls import path
 from bmstu_lab import views
+from django.contrib import admin
 
 urlpatterns = [
     path('', views.index, name='home'),
+    path('admin/', admin.site.urls),
     path('ships/<int:ship_id>/', views.ship, name='ship'),
-    path('icebreaker/<int:req_id>/', views.icebreaker, name='icebreaker'),
+    path('ships/<int:ship_id>/add_to_icebreaker/', views.add_ship_to_draft_icebreaker, name="add_ship_to_draft_icebreaker"),
+    path('icebreaker/<int:icebreaker_id>/delete/', views.delete_icebreaker, name="delete_icebreaker"),
+    path('icebreaker/<int:icebreaker_id>/', views.icebreaker, name='icebreaker'),
 ]
