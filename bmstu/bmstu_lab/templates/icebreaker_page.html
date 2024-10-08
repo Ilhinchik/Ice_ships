@@ -20,7 +20,11 @@
 
   <div class="request-container">
     <h1>Составление заявки на проводку ледоколом</h1>
+    {% if icebreaker.status == 5 %}
 
+    <h1>Заявка удалена</h1>
+
+    {% else %}
     <!-- Форма для выбора данных -->
     <form method="POST">
       {% csrf_token %}
@@ -66,6 +70,8 @@
       {% include "ship_card.html" %}
       {% endfor %}
     </div>
+
+    {% endif %}
   </div>
 
 </body>

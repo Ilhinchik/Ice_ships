@@ -15,7 +15,7 @@ class Ship(models.Model):
     length = models.FloatField(verbose_name="Длина", blank=True, null=True)
     engine = models.CharField(max_length=255, verbose_name="Двигатель", blank=True)
     status = models.IntegerField(choices=STATUS_CHOICES, default=1, verbose_name="Статус")
-    image = models.ImageField(default="images/default.png", verbose_name="Изображение")
+    image = models.CharField(verbose_name="Изображение", blank=True)
     description = models.TextField(verbose_name="Описание", blank=True)
 
     def __str__(self):
