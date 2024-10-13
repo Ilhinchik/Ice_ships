@@ -19,7 +19,7 @@ class Ship(models.Model):
     description = models.TextField(verbose_name="Описание", blank=True)
 
     def __str__(self):
-        return self.title
+        return self.ship_name
 
     class Meta:
         verbose_name = "Корабль"
