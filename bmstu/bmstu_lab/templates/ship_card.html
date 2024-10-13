@@ -3,9 +3,9 @@
 {% if "http://localhost:8000/icebreaker/" in request.build_absolute_uri or "http://127.0.0.1:8000/icebreaker" in request.build_absolute_uri %}
 
 <div class="ship-card">
-    <img src="{{ ship.image }}" alt="{{ ship.title }}" class="ship-image">
+    <img src="{{ ship.image }}" alt="{{ ship.ship_name }}" class="ship-image">
     <div class="ship-info">
-      <h3>{{ ship.title }}</h3>
+      <h3>{{ ship.ship_name }}</h3>
       <div class="comment-group">
         <label for="comment-{{ ship.id }}">Позиция:</label>
         {% if ship.order %}
@@ -21,9 +21,9 @@
 {% else %}
   
 <div class="ship-card">
-    <img src="{{ ship.image }}" alt="{{ ship.title }}" class="ship-image">
+    <img src="{{ ship.image }}" alt="{{ ship.ship_name }}" class="ship-image">
     <div class="ship-info">
-        <h3>{{ ship.title }}</h3>
+        <h3>{{ ship.ship_name }}</h3>
         <p>Год изготовления: {{ ship.year }}</p>
         <p>Ледовый класс: {{ ship.ice_class }}</p>
         <div class="button-group">

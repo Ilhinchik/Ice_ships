@@ -7,16 +7,16 @@ from .models import Ship, Icebreaker, ShipIcebreaker
 
 
 def index(request):
-    title = request.GET.get("title", "")
+    ship_name = request.GET.get("ship_name", "")
     ships = Ship.objects.filter(status=1)
 
-    if title:
-        ships = ships.filter(title__icontains=title)
+    if ship_name:
+        ships = ships.filter(ship_name__icontains=ship_name)
 
     draft_icebreaker = get_draft_icebreaker()
 
     context = {
-        "title": title,
+        "ship_name": ship_name,
         "ships": ships
     }
 

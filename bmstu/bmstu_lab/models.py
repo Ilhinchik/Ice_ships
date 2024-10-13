@@ -9,7 +9,7 @@ class Ship(models.Model):
         (2, 'Удалена'),
     )
 
-    title = models.CharField(max_length=100, verbose_name="Название")
+    ship_name = models.CharField(max_length=100, verbose_name="Название")
     year = models.IntegerField(verbose_name="Год постройки", null=True, blank=True)
     ice_class = models.CharField(max_length=10, verbose_name="Ледовый класс", blank=True)
     length = models.FloatField(verbose_name="Длина", blank=True, null=True)
@@ -41,8 +41,8 @@ class Icebreaker(models.Model):
     date_formation = models.DateTimeField(verbose_name="Дата формирования", blank=True, null=True)
     date_complete = models.DateTimeField(verbose_name="Дата завершения", blank=True, null=True)
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь", null=True, related_name='owner')
-    moderator = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Модератор", null=True, related_name='moderator')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь", related_name='owner', default=1)
+    moderator = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Модератор", blank=True, null=True, related_name='moderator')
 
     date = models.DateField(verbose_name="Дата проводки", blank=True, null=True)
     start_point = models.CharField(max_length=255, verbose_name="Начальная точка проводки", blank=True, null=True)
@@ -68,8 +68,8 @@ class Icebreaker(models.Model):
 
 
 class ShipIcebreaker(models.Model):
-    ship = models.ForeignKey(Ship, on_delete=models.DO_NOTHING, blank=True, null=True, verbose_name="Корабль")
-    icebreaker = models.ForeignKey(Icebreaker, on_delete=models.DO_NOTHING, blank=True, null=True, verbose_name="Проводка")
+    ship = models.ForeignKey(Ship, on_delete=models.DO_NOTHING, blank=True, verbose_name="Корабль")
+    icebreaker = models.ForeignKey(Icebreaker, on_delete=models.DO_NOTHING, blank=True, verbose_name="Проводка")
     order = models.CharField(max_length=50, verbose_name="Порядок", blank=True, null=True)
 
     def __str__(self):

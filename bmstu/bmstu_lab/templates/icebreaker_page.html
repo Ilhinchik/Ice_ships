@@ -26,33 +26,33 @@
 
     {% else %}
     <!-- Форма для выбора данных -->
-    <form method="POST">
+    <form>
       {% csrf_token %}
       <div class="info">
         <div class="input-group">
           <label for="start-point">Дата:</label>
           {% if icebreaker.date %}
-              <input class="form-control" type="date" id="date" value="{{ icebreaker.date|date:'Y-m-d' }}" name="date" required>
+              <input class="form-control" type="date" id="date" value="{{ icebreaker.date|date:'Y-m-d' }}" name="date" >
           {% else %}
-              <input class="form-control" type="date" id="date" name="date" required>
+              <input class="form-control" type="date" id="date" name="date" >
           {% endif %}
         </div>
 
         <div class="input-group">
           <label for="start-point">Начальная точка проводки:</label>
           {% if icebreaker.start_point %}
-          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" value="{{ icebreaker.start_point }}" required>
+          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" value="{{ icebreaker.start_point }}" >
           {% else %}
-          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" required>
+          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" >
           {% endif %}
         </div>
 
         <div class="input-group">
           <label for="end-point">Конечная точка проводки:</label>
           {% if icebreaker.finish_point %}
-          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" value="{{ icebreaker.finish_point }}" required>
+          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" value="{{ icebreaker.finish_point }}" >
           {% else %}
-          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" required>
+          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" >
           {% endif %}
         </div>
 
