@@ -16,14 +16,37 @@ Including another URLconf
 """
 
 from django.urls import path
-from bmstu_lab import views
+from bmstu_lab.views import *
 from django.contrib import admin
 
 urlpatterns = [
-    path('', views.index, name='home'),
+
     path('admin/', admin.site.urls),
-    path('ships/<int:ship_id>/', views.ship, name='ship'),
-    path('ships/<int:ship_id>/add_to_icebreaker/', views.add_ship_to_draft_icebreaker, name="add_ship_to_draft_icebreaker"),
-    path('icebreaker/<int:icebreaker_id>/delete/', views.delete_icebreaker, name="delete_icebreaker"),
-    path('icebreaker/<int:icebreaker_id>/', views.icebreaker, name='icebreaker'),
+    # Набор методов для услуг
+    path('api/ships/search/', search_ships),  # GET
+    path('api/ships/<int:ship_id>/', get_ship_by_id),  # GET
+    path('api/ships/<int:ship_id>/image/', get_ship_image),  # GET
+    path('api/ships/<int:ship_id>/update/', update_ship),  # PUT
+    path('api/ships/<int:ship_id>/update_image/', update_ship_image),  # PUT
+    path('api/ships/<int:ship_id>/delete/', delete_ship),  # DELETE
+    path('api/ships/create/', create_ship),  # POST
+    path('api/ships/<int:ship_id>/add_to_icebreaker/', add_ship_to_icebreaker),  # POST
+
+    # Набор методов для заявок
+    path('api/icebreakers/search/', search_icebreakers),  # GET
+    path('api/icebreakers/<int:icebreaker_id>/', get_icebreaker_by_id),  # GET
+    path('api/icebreakers/<int:icebreaker_id>/update/', update_icebreaker),  # PUT
+    path('api/icebreakers/<int:icebreaker_id>/update_status_user/', update_status_user),  # PUT
+    path('api/icebreakers/<int:icebreaker_id>/update_status_admin/', update_status_admin),  # PUT
+    path('api/icebreakers/<int:icebreaker_id>/delete/', delete_icebreaker),  # DELETE
+
+    # Набор методов для м-м
+    path('api/icebreakers/<int:icebreaker_id>/update_ship/<int:ship_id>/', update_ship_in_icebreaker),  # PUT
+    path('api/icebreakers/<int:icebreaker_id>/delete_ship/<int:ship_id>/', delete_ship_from_icebreaker),  # DELETE
+
+    # Набор методов пользователей
+    path('api/users/register/', register), # POST
+    path('api/users/login/', login), # POST
+    path('api/users/logout/', logout), # POST
+    path('api/users/<int:user_id>/update/', update_user), # PUT
 ]
