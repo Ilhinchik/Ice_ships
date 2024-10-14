@@ -22,7 +22,7 @@ def get_moderator():
     return User.objects.filter(is_superuser=True).first()
 
 
-@api_view(["GET"])
+@api_view(["GET"]) # 1
 def search_ships(request):
     query = request.GET.get("query", "")
 
@@ -40,7 +40,7 @@ def search_ships(request):
     return Response(resp)
 
 
-@api_view(["GET"])
+@api_view(["GET"]) # 1
 def get_ship_by_id(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -51,7 +51,7 @@ def get_ship_by_id(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["PUT"])
+@api_view(["PUT"]) # 1
 def update_ship(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -71,17 +71,24 @@ def update_ship(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["POST"])
+@api_view(["POST"]) # 1
 def create_ship(request):
-    Ship.objects.create()
+    data = request.data
 
-    ships = Ship.objects.filter(status=1)
-    serializer = ShipSerializer(ships, many=True)
+    required_fields = ['ship_name', 'year', 'ice_class', 'length', 'engine', 'description']
+    for field in required_fields:
+        if field not in data:
+            return Response({'error': f'Missing required field: {field}'}, status=400)
+        
+
+    ship = Ship.objects.create(**data)
+    serializer = ShipSerializer(ship)
+
 
     return Response(serializer.data)
 
 
-@api_view(["DELETE"])
+@api_view(["DELETE"]) # 1
 def delete_ship(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -96,10 +103,10 @@ def delete_ship(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["POST"])
+@api_view(["POST"]) # 1
 def add_ship_to_icebreaker(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Ship not found'}, status=status.HTTP_404_NOT_FOUND)
 
     ship = Ship.objects.get(pk=ship_id)
 
@@ -112,30 +119,28 @@ def add_ship_to_icebreaker(request, ship_id):
         draft_icebreaker.save()
 
     if ShipIcebreaker.objects.filter(icebreaker=draft_icebreaker, ship=ship).exists():
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({'error': 'Ship already added to this icebreaker'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
-    item = ShipIcebreaker.objects.create()
-    item.icebreaker = draft_icebreaker
-    item.ship = ship
+    item = ShipIcebreaker.objects.create(icebreaker=draft_icebreaker, ship=ship)
     item.save()
 
     serializer = IcebreakerSerializer(draft_icebreaker, many=False)
 
-    return Response(serializer.data["ships"])
+    return Response(serializer.data)
 
 
-@api_view(["GET"])
+@api_view(["GET"]) # 1
 def get_ship_image(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     ship = Ship.objects.get(pk=ship_id)
-    response = requests.get(ship.image.url.replace("localhost", "minio"))
+    response = requests.get(ship.image.replace("localhost", "minio"))
 
     return HttpResponse(response, content_type="image/png")
 
 
-@api_view(["POST"])
+@api_view(["PUT"]) # не обновляет, нужно разобраться с minio
 def update_ship_image(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -152,7 +157,7 @@ def update_ship_image(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["GET"])
+@api_view(["GET"]) # не понятно
 def search_icebreakers(request):
     status = int(request.GET.get("status", 0))
     date_formation_start = request.GET.get("date_formation_start")
@@ -174,7 +179,7 @@ def search_icebreakers(request):
     return Response(serializer.data)
 
 
-@api_view(["GET"])
+@api_view(["GET"]) # 1
 def get_icebreaker_by_id(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -185,7 +190,7 @@ def get_icebreaker_by_id(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["PUT"])
+@api_view(["PUT"]) # 1
 def update_icebreaker(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -199,7 +204,7 @@ def update_icebreaker(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["PUT"])
+@api_view(["PUT"])  # 1
 def update_status_user(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -209,7 +214,7 @@ def update_status_user(request, icebreaker_id):
     if icebreaker.status != 1:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    icebreaker.status = 2
+    icebreaker.status = 5
     icebreaker.date_formation = timezone.now()
     icebreaker.save()
 
@@ -218,7 +223,7 @@ def update_status_user(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["PUT"])
+@api_view(["PUT"]) # 1
 def update_status_admin(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -230,7 +235,7 @@ def update_status_admin(request, icebreaker_id):
 
     icebreaker = Icebreaker.objects.get(pk=icebreaker_id)
 
-    if icebreaker.status != 2:
+    if icebreaker.status != 5:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     icebreaker.date_complete = timezone.now()
@@ -243,7 +248,7 @@ def update_status_admin(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["DELETE"])
+@api_view(["DELETE"]) # 1
 def delete_icebreaker(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -261,7 +266,7 @@ def delete_icebreaker(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["DELETE"])
+@api_view(["DELETE"]) # 
 def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(icebreaker_id=icebreaker_id, ship_id=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -281,7 +286,7 @@ def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
     return Response(ships)
 
 
-@api_view(["PUT"])
+@api_view(["PUT"]) # 1
 def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(ship_id=ship_id, icebreaker_id=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)

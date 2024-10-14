@@ -5,7 +5,7 @@ from .models import *
 
 class ShipSerializer(serializers.ModelSerializer):
     def get_image(self, ship):
-        return ship.image.url.replace("minio", "localhost", 1)
+        return ship.image.replace("minio", "localhost", 1)
 
     class Meta:
         model = Ship
