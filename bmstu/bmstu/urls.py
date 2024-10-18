@@ -23,17 +23,16 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     # Набор методов для услуг
-    path('api/ships/search/', search_ships),  # GET
+    path('api/ships/', search_ships),  # GET
     path('api/ships/<int:ship_id>/', get_ship_by_id),  # GET
-    path('api/ships/<int:ship_id>/image/', get_ship_image),  # GET
     path('api/ships/<int:ship_id>/update/', update_ship),  # PUT
-    path('api/ships/<int:ship_id>/update_image/', update_ship_image),  # PUT
+    path('api/ships/<int:ship_id>/update_image/', update_ship_image),  # POST
     path('api/ships/<int:ship_id>/delete/', delete_ship),  # DELETE
     path('api/ships/create/', create_ship),  # POST
     path('api/ships/<int:ship_id>/add_to_icebreaker/', add_ship_to_icebreaker),  # POST
 
     # Набор методов для заявок
-    path('api/icebreakers/search/', search_icebreakers),  # GET
+    path('api/icebreakers/', search_icebreakers),  # GET
     path('api/icebreakers/<int:icebreaker_id>/', get_icebreaker_by_id),  # GET
     path('api/icebreakers/<int:icebreaker_id>/update/', update_icebreaker),  # PUT
     path('api/icebreakers/<int:icebreaker_id>/update_status_user/', update_status_user),  # PUT

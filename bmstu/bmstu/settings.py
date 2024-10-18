@@ -135,8 +135,10 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_STORAGE_BUCKET_NAME = 'image'
 AWS_ACCESS_KEY_ID = 'minio'
 AWS_SECRET_ACCESS_KEY = 'minio124'
-AWS_S3_ENDPOINT_URL = 'localhost:9000'
-MINIO_USE_SSL = False
+AWS_S3_ENDPOINT_URL = "http://localhost:9000"
+AWS_S3_URL_PROTOCOL = "http:"
+AWS_S3_USE_SSL = False

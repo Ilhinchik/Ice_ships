@@ -1,4 +1,5 @@
 import requests
+from django.core.files.storage import default_storage
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
 from django.utils import timezone
@@ -24,9 +25,9 @@ def get_moderator():
 
 @api_view(["GET"]) # 1
 def search_ships(request):
-    query = request.GET.get("query", "")
+    ship_name = request.GET.get("ship_name", "")
 
-    ships = Ship.objects.filter(status=1).filter(ship_name__icontains=query)
+    ships = Ship.objects.filter(status=1).filter(ship_name__icontains=ship_name)
 
     serializer = ShipSerializer(ships, many=True)
 
@@ -34,6 +35,7 @@ def search_ships(request):
 
     resp = {
         "ships": serializer.data,
+        "ships_count": len(serializer.data),
         "draft_icebreaker": draft_icebreaker.pk if draft_icebreaker else None
     }
 
@@ -129,18 +131,8 @@ def add_ship_to_icebreaker(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["GET"]) # 1
-def get_ship_image(request, ship_id):
-    if not Ship.objects.filter(pk=ship_id).exists():
-        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    ship = Ship.objects.get(pk=ship_id)
-    response = requests.get(ship.image.replace("localhost", "minio"))
-
-    return HttpResponse(response, content_type="image/png")
-
-
-@api_view(["PUT"]) # не обновляет, нужно разобраться с minio
+@api_view(["POST"]) # 1
 def update_ship_image(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -157,7 +149,8 @@ def update_ship_image(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["GET"]) # не понятно
+
+@api_view(["GET"]) # 1
 def search_icebreakers(request):
     status = int(request.GET.get("status", 0))
     date_formation_start = request.GET.get("date_formation_start")
@@ -214,7 +207,7 @@ def update_status_user(request, icebreaker_id):
     if icebreaker.status != 1:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    icebreaker.status = 5
+    icebreaker.status = 2
     icebreaker.date_formation = timezone.now()
     icebreaker.save()
 
@@ -235,7 +228,7 @@ def update_status_admin(request, icebreaker_id):
 
     icebreaker = Icebreaker.objects.get(pk=icebreaker_id)
 
-    if icebreaker.status != 5:
+    if icebreaker.status != 2:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     icebreaker.date_complete = timezone.now()
@@ -266,7 +259,7 @@ def delete_icebreaker(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["DELETE"]) # 
+@api_view(["DELETE"]) # 1
 def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(icebreaker_id=icebreaker_id, ship_id=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -301,7 +294,7 @@ def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["POST"])
+@api_view(["POST"]) # 1
 def register(request):
     serializer = UserRegisterSerializer(data=request.data)
 
@@ -315,7 +308,7 @@ def register(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-@api_view(["POST"])
+@api_view(["POST"]) # 1
 def login(request):
     serializer = UserLoginSerializer(data=request.data)
 
@@ -329,12 +322,12 @@ def login(request):
     return Response(status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
+@api_view(["POST"]) # 1
 def logout(request):
     return Response(status=status.HTTP_200_OK)
 
 
-@api_view(["PUT"])
+@api_view(["PUT"]) # 1
 def update_user(request, user_id):
     if not User.objects.filter(pk=user_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
