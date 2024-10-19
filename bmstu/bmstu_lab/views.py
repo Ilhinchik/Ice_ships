@@ -94,6 +94,7 @@ def update_ship(request, ship_id):
 
 
 @api_view(["POST"]) # 1
+@permission_classes([IsModerator])
 def create_ship(request):
     data = request.data
 
@@ -111,6 +112,7 @@ def create_ship(request):
 
 
 @api_view(["DELETE"]) # 1
+@permission_classes([IsModerator])
 def delete_ship(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -126,6 +128,7 @@ def delete_ship(request, ship_id):
 
 
 @api_view(["POST"]) # 1
+@permission_classes([IsAuthenticated])
 def add_ship_to_icebreaker(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response({'error': 'Ship not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -153,6 +156,7 @@ def add_ship_to_icebreaker(request, ship_id):
 
 
 @api_view(["POST"]) # 1
+@permission_classes([IsModerator])
 def update_ship_image(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -171,12 +175,18 @@ def update_ship_image(request, ship_id):
 
 
 @api_view(["GET"]) # 1
+@permission_classes([IsAuthenticated])
 def search_icebreakers(request):
+    user = identity_user(request)
+
     status = int(request.GET.get("status", 0))
     date_formation_start = request.GET.get("date_formation_start")
     date_formation_end = request.GET.get("date_formation_end")
 
     icebreakers = Icebreaker.objects.exclude(status__in=[1, 5])
+
+    if not user.is_staff:
+        icebreakers = icebreakers.filter(owner=user)
 
     if status > 0:
         icebreakers = icebreakers.filter(status=status)
@@ -193,7 +203,10 @@ def search_icebreakers(request):
 
 
 @api_view(["GET"]) # 1
+@permission_classes([IsAuthenticated])
 def get_icebreaker_by_id(request, icebreaker_id):
+    user = identity_user(request)
+
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -203,7 +216,9 @@ def get_icebreaker_by_id(request, icebreaker_id):
     return Response(serializer.data)
 
 
+@swagger_auto_schema(method='put', request_body=IcebreakerSerializer)
 @api_view(["PUT"]) # 1
+@permission_classes([IsAuthenticated])
 def update_icebreaker(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -218,14 +233,13 @@ def update_icebreaker(request, icebreaker_id):
 
 
 @api_view(["PUT"])  # 1
+@permission_classes([IsAuthenticated])
 def update_status_user(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     icebreaker = Icebreaker.objects.get(pk=icebreaker_id)
 
-    if icebreaker.status != 1:
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     icebreaker.status = 2
     icebreaker.date_formation = timezone.now()
@@ -237,6 +251,7 @@ def update_status_user(request, icebreaker_id):
 
 
 @api_view(["PUT"]) # 1
+@permission_classes([IsModerator])
 def update_status_admin(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -262,6 +277,7 @@ def update_status_admin(request, icebreaker_id):
 
 
 @api_view(["DELETE"]) # 1
+@permission_classes([IsAuthenticated])
 def delete_icebreaker(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -280,6 +296,7 @@ def delete_icebreaker(request, icebreaker_id):
 
 
 @api_view(["DELETE"]) # 1
+@permission_classes([IsAuthenticated])
 def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(icebreaker_id=icebreaker_id, ship_id=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -298,8 +315,21 @@ def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
 
     return Response(ships)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_ship_icebreaker(request, icebreaker_id, ship_id):
+    if not ShipIcebreaker.objects.filter(ship_id=ship_id, icebreaker_id=icebreaker_id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
+    item = ShipIcebreaker.objects.get(ship_id=ship_id, icebreaker_id=icebreaker_id)
+
+    serializer = ShipIcebreakerSerializer(item, many=False)
+
+    return Response(serializer.data)
+
+@swagger_auto_schema(method='PUT', request_body=ShipIcebreakerSerializer)
 @api_view(["PUT"]) # 1
+@permission_classes([IsAuthenticated])
 def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(ship_id=ship_id, icebreaker_id=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -313,7 +343,7 @@ def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
 
     return Response(serializer.data)
 
-
+@swagger_auto_schema(method='post', request_body=UserRegisterSerializer)
 @api_view(["POST"]) # 1
 def register(request):
     serializer = UserRegisterSerializer(data=request.data)
@@ -327,7 +357,7 @@ def register(request):
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
+@swagger_auto_schema(method='post', request_body=UserLoginSerializer)
 @api_view(["POST"]) # 1
 def login(request):
     serializer = UserLoginSerializer(data=request.data)
@@ -342,12 +372,22 @@ def login(request):
     return Response(status=status.HTTP_200_OK)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def check(request):
+    user = identity_user(request)
+    serializer = UserSerializer(user, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@permission_classes([IsAuthenticated])
 @api_view(["POST"]) # 1
 def logout(request):
     return Response(status=status.HTTP_200_OK)
 
-
+@swagger_auto_schema(method='PUT', request_body=UserSerializer)
 @api_view(["PUT"]) # 1
+@permission_classes([IsAuthenticated])
 def update_user(request, user_id):
     if not User.objects.filter(pk=user_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)

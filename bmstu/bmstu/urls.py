@@ -59,6 +59,7 @@ urlpatterns = [
     path('api/icebreakers/<int:icebreaker_id>/delete/', delete_icebreaker),  # DELETE
 
     # Набор методов для м-м
+    path('api/lectures/<int:lecture_id>/specialists/<int:specialist_id>/', get_ship_icebreaker),  # GET
     path('api/icebreakers/<int:icebreaker_id>/update_ship/<int:ship_id>/', update_ship_in_icebreaker),  # PUT
     path('api/icebreakers/<int:icebreaker_id>/delete_ship/<int:ship_id>/', delete_ship_from_icebreaker),  # DELETE
 
