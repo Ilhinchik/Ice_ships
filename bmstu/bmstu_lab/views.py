@@ -1,12 +1,12 @@
+import requests
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
-from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_datetime, parse_date
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
 
 from .jwt_helper import *
 from .permissions import *
@@ -14,7 +14,7 @@ from .serializers import *
 from .utils import identity_user
 
 
-def get_draft_icebreaker():
+def get_draft_icebreaker(request):
     user = identity_user(request)
 
     if user is None:
@@ -25,43 +25,36 @@ def get_draft_icebreaker():
     return icebreaker
 
 
-def get_user():
-    return User.objects.filter(is_superuser=False).first()
-
-
-def get_moderator():
-    return User.objects.filter(is_superuser=True).first()
-
 @swagger_auto_schema(
     method='get',
     manual_parameters=[
         openapi.Parameter(
-            'query',
+            'ship_name',
             openapi.IN_QUERY,
             type=openapi.TYPE_STRING
         )
     ]
 )
-@api_view(["GET"]) # 1
+@api_view(["GET"])
 def search_ships(request):
     ship_name = request.GET.get("ship_name", "")
 
-    ships = Ship.objects.filter(status=1).filter(ship_name__icontains=ship_name)
+    ship = Ship.objects.filter(status=1).filter(ship_name__icontains=ship_name)
 
-    serializer = ShipSerializer(ships, many=True)
+    serializer = ShipSerializer(ship, many=True)
 
-    draft_icebreaker = get_draft_icebreaker()
+    draft_icebreaker = get_draft_icebreaker(request)
 
     resp = {
         "ships": serializer.data,
         "ships_count": len(serializer.data),
-        "draft_icebreaker": draft_icebreaker.pk if draft_icebreaker else None
+        "draft_icebreaker_id": draft_icebreaker.pk if draft_icebreaker else None
     }
 
     return Response(resp)
 
 
-@api_view(["GET"]) # 1
+@api_view(["GET"])
 def get_ship_by_id(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -72,7 +65,7 @@ def get_ship_by_id(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["PUT"]) # 1
+@api_view(["PUT"])
 @permission_classes([IsModerator])
 def update_ship(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
@@ -93,25 +86,17 @@ def update_ship(request, ship_id):
     return Response(serializer.data)
 
 
-@api_view(["POST"]) # 1
+@api_view(["POST"])
 @permission_classes([IsModerator])
 def create_ship(request):
-    data = request.data
+    ship = Ship.objects.create()
 
-    required_fields = ['ship_name', 'year', 'ice_class', 'length', 'engine', 'description']
-    for field in required_fields:
-        if field not in data:
-            return Response({'error': f'Missing required field: {field}'}, status=400)
-        
-
-    ship = Ship.objects.create(**data)
     serializer = ShipSerializer(ship)
-
 
     return Response(serializer.data)
 
 
-@api_view(["DELETE"]) # 1
+@api_view(["DELETE"])
 @permission_classes([IsModerator])
 def delete_ship(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
@@ -121,41 +106,42 @@ def delete_ship(request, ship_id):
     ship.status = 2
     ship.save()
 
-    ships = Ship.objects.filter(status=1)
-    serializer = ShipSerializer(ships, many=True)
+    ship = Ship.objects.filter(status=1)
+    serializer = ShipSerializer(ship, many=True)
 
     return Response(serializer.data)
 
 
-@api_view(["POST"]) # 1
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_ship_to_icebreaker(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
-        return Response({'error': 'Ship not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     ship = Ship.objects.get(pk=ship_id)
 
-    draft_icebreaker = get_draft_icebreaker()
+    draft_icebreaker = get_draft_icebreaker(request)
 
     if draft_icebreaker is None:
         draft_icebreaker = Icebreaker.objects.create()
-        draft_icebreaker.owner = get_user()
         draft_icebreaker.date_created = timezone.now()
+        draft_icebreaker.owner = identity_user(request)
         draft_icebreaker.save()
 
     if ShipIcebreaker.objects.filter(icebreaker=draft_icebreaker, ship=ship).exists():
-        return Response({'error': 'Ship already added to this icebreaker'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
-    item = ShipIcebreaker.objects.create(icebreaker=draft_icebreaker, ship=ship)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    item = ShipIcebreaker.objects.create()
+    item.icebreaker = draft_icebreaker
+    item.ship = ship
     item.save()
 
     serializer = IcebreakerSerializer(draft_icebreaker, many=False)
 
-    return Response(serializer.data)
+    return Response(serializer.data["ships"])
 
 
-
-@api_view(["POST"]) # 1
+@api_view(["POST"])
 @permission_classes([IsModerator])
 def update_ship_image(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
@@ -173,13 +159,12 @@ def update_ship_image(request, ship_id):
     return Response(serializer.data)
 
 
-
-@api_view(["GET"]) # 1
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def search_icebreakers(request):
     user = identity_user(request)
 
-    status = int(request.GET.get("status", 0))
+    status_id = int(request.GET.get("status", 0))
     date_formation_start = request.GET.get("date_formation_start")
     date_formation_end = request.GET.get("date_formation_end")
 
@@ -188,8 +173,8 @@ def search_icebreakers(request):
     if not user.is_staff:
         icebreakers = icebreakers.filter(owner=user)
 
-    if status > 0:
-        icebreakers = icebreakers.filter(status=status)
+    if status_id > 0:
+        icebreakers = icebreakers.filter(status=status_id)
 
     if date_formation_start and parse_datetime(date_formation_start):
         icebreakers = icebreakers.filter(date_formation__gte=parse_datetime(date_formation_start))
@@ -202,12 +187,12 @@ def search_icebreakers(request):
     return Response(serializer.data)
 
 
-@api_view(["GET"]) # 1
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_icebreaker_by_id(request, icebreaker_id):
     user = identity_user(request)
 
-    if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
+    if not Icebreaker.objects.filter(pk=icebreaker_id, owner=user).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     icebreaker = Icebreaker.objects.get(pk=icebreaker_id)
@@ -217,7 +202,7 @@ def get_icebreaker_by_id(request, icebreaker_id):
 
 
 @swagger_auto_schema(method='put', request_body=IcebreakerSerializer)
-@api_view(["PUT"]) # 1
+@api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_icebreaker(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
@@ -232,14 +217,13 @@ def update_icebreaker(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["PUT"])  # 1
+@api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_status_user(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     icebreaker = Icebreaker.objects.get(pk=icebreaker_id)
-
 
     icebreaker.status = 2
     icebreaker.date_formation = timezone.now()
@@ -250,7 +234,7 @@ def update_status_user(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["PUT"]) # 1
+@api_view(["PUT"])
 @permission_classes([IsModerator])
 def update_status_admin(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
@@ -266,9 +250,9 @@ def update_status_admin(request, icebreaker_id):
     if icebreaker.status != 2:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    icebreaker.date_complete = timezone.now()
     icebreaker.status = request_status
-    icebreaker.moderator = get_moderator()
+    icebreaker.date_complete = timezone.now()
+    icebreaker.moderator = identity_user(request)
     icebreaker.save()
 
     serializer = IcebreakerSerializer(icebreaker, many=False)
@@ -276,7 +260,7 @@ def update_status_admin(request, icebreaker_id):
     return Response(serializer.data)
 
 
-@api_view(["DELETE"]) # 1
+@api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_icebreaker(request, icebreaker_id):
     if not Icebreaker.objects.filter(pk=icebreaker_id).exists():
@@ -290,12 +274,10 @@ def delete_icebreaker(request, icebreaker_id):
     icebreaker.status = 5
     icebreaker.save()
 
-    serializer = IcebreakerSerializer(icebreaker, many=False)
-
-    return Response(serializer.data)
+    return Response(status=status.HTTP_200_OK)
 
 
-@api_view(["DELETE"]) # 1
+@api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(icebreaker_id=icebreaker_id, ship_id=ship_id).exists():
@@ -315,6 +297,7 @@ def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
 
     return Response(ships)
 
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_ship_icebreaker(request, icebreaker_id, ship_id):
@@ -327,8 +310,9 @@ def get_ship_icebreaker(request, icebreaker_id, ship_id):
 
     return Response(serializer.data)
 
+
 @swagger_auto_schema(method='PUT', request_body=ShipIcebreakerSerializer)
-@api_view(["PUT"]) # 1
+@api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(ship_id=ship_id, icebreaker_id=icebreaker_id).exists():
@@ -343,22 +327,9 @@ def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
 
     return Response(serializer.data)
 
-@swagger_auto_schema(method='post', request_body=UserRegisterSerializer)
-@api_view(["POST"]) # 1
-def register(request):
-    serializer = UserRegisterSerializer(data=request.data)
-
-    if not serializer.is_valid():
-        return Response(status=status.HTTP_409_CONFLICT)
-
-    user = serializer.save()
-
-    serializer = UserSerializer(user)
-
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @swagger_auto_schema(method='post', request_body=UserLoginSerializer)
-@api_view(["POST"]) # 1
+@api_view(["POST"])
 def login(request):
     serializer = UserLoginSerializer(data=request.data)
 
@@ -369,7 +340,36 @@ def login(request):
     if user is None:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    return Response(status=status.HTTP_200_OK)
+    access_token = create_access_token(user.id)
+
+    serializer = UserSerializer(user)
+
+    response = Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    response.set_cookie('access_token', access_token, httponly=True)
+
+    return response
+
+
+@swagger_auto_schema(method='post', request_body=UserRegisterSerializer)
+@api_view(["POST"])
+def register(request):
+    serializer = UserRegisterSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    user = serializer.save()
+
+    access_token = create_access_token(user.id)
+
+    serializer = UserSerializer(user)
+
+    response = Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    response.set_cookie('access_token', access_token, httponly=True)
+
+    return response
 
 
 @api_view(["POST"])
@@ -380,13 +380,19 @@ def check(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@api_view(["POST"]) # 1
 def logout(request):
+    access_token = get_access_token(request)
+
+    if access_token not in cache:
+        cache.set(access_token, settings.JWT["ACCESS_TOKEN_LIFETIME"])
+
     return Response(status=status.HTTP_200_OK)
 
+
 @swagger_auto_schema(method='PUT', request_body=UserSerializer)
-@api_view(["PUT"]) # 1
+@api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_user(request, user_id):
     if not User.objects.filter(pk=user_id).exists():
