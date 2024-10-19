@@ -4,8 +4,10 @@ from .models import *
 
 
 class ShipSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     def get_image(self, ship):
-        return ship.image.replace("minio", "localhost", 1)
+        return ship.image.url.replace("minio", "localhost", 1)
 
     class Meta:
         model = Ship
@@ -13,7 +15,6 @@ class ShipSerializer(serializers.ModelSerializer):
 
 
 class IcebreakerSerializer(serializers.ModelSerializer):
-    ships = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField()
     moderator = serializers.SerializerMethodField()
 
@@ -24,10 +25,7 @@ class IcebreakerSerializer(serializers.ModelSerializer):
         if icebreaker.moderator:
             return icebreaker.moderator.username
             
-    def get_ships(self, icebreaker):
-        items = ShipIcebreaker.objects.filter(icebreaker=icebreaker)
-        serializer = ShipSerializer([item.ship for item in items], many=True)
-        return serializer.data
+        return ""
 
     class Meta:
         model = Icebreaker
@@ -35,6 +33,7 @@ class IcebreakerSerializer(serializers.ModelSerializer):
 
 
 class IcebreakersSerializer(serializers.ModelSerializer):
+    ships = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField()
     moderator = serializers.SerializerMethodField()
 
@@ -45,6 +44,10 @@ class IcebreakersSerializer(serializers.ModelSerializer):
         if icebreaker.moderator:
             return icebreaker.moderator.username
 
+    def get_ships(self, lecture):
+        items = ShipIcebreaker.objects.filter(lecture=lecture)
+        return [{**ShipSerializer(item.ship).data, "value": item.value} for item in items]
+    
     class Meta:
         model = Icebreaker
         fields = "__all__"

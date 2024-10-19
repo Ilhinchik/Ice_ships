@@ -1,18 +1,28 @@
-import requests
-from django.core.files.storage import default_storage
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
+from .jwt_helper import *
+from .permissions import *
 from .serializers import *
+from .utils import identity_user
 
 
 def get_draft_icebreaker():
-    return Icebreaker.objects.filter(status=1).first()
+    user = identity_user(request)
+
+    if user is None:
+        return None
+
+    icebreaker = Icebreaker.objects.filter(owner_id=user.id).filter(status=1).first()
+
+    return icebreaker
 
 
 def get_user():
@@ -22,7 +32,16 @@ def get_user():
 def get_moderator():
     return User.objects.filter(is_superuser=True).first()
 
-
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter(
+            'query',
+            openapi.IN_QUERY,
+            type=openapi.TYPE_STRING
+        )
+    ]
+)
 @api_view(["GET"]) # 1
 def search_ships(request):
     ship_name = request.GET.get("ship_name", "")
@@ -54,6 +73,7 @@ def get_ship_by_id(request, ship_id):
 
 
 @api_view(["PUT"]) # 1
+@permission_classes([IsModerator])
 def update_ship(request, ship_id):
     if not Ship.objects.filter(pk=ship_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
