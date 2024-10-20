@@ -7,12 +7,14 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+import redis
 
 from .jwt_helper import *
 from .permissions import *
 from .serializers import *
 from .utils import identity_user
 
+session_storage = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 
 def get_draft_icebreaker(request):
     user = identity_user(request)
@@ -357,7 +359,7 @@ def register(request):
     serializer = UserRegisterSerializer(data=request.data)
 
     if not serializer.is_valid():
-        return Response(status=status.HTTP_409_CONFLICT)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
     user = serializer.save()
 
@@ -370,6 +372,14 @@ def register(request):
     response.set_cookie('access_token', access_token, httponly=True)
 
     return response
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def check(request):
+    user = identity_user(request)
+    serializer = UserSerializer(user, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
