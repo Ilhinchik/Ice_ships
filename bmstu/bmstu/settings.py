@@ -137,21 +137,14 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+SESSION_LIFETIME = timedelta(days=1)
+
 JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "ALGORITHM": "HS256",
     "SIGNING_KEY": "MY_SIGNING_KEY_123",
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        },
-    }
-}
 
 CACHES = {
     "default": {
@@ -163,8 +156,6 @@ CACHES = {
     }
 }
 
-REDIS_HOST = "127.0.0.1"
-REDIS_PORT = 6379
 
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

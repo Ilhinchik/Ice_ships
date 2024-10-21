@@ -66,7 +66,6 @@ urlpatterns = [
     # Набор методов пользователей
     path('api/users/register/', register), # POST
     path('api/users/login/', login), # POST
-    path("api/check/", check),  # POST
     path('api/users/logout/', logout), # POST
     path('api/users/<int:user_id>/update/', update_user), # PUT
 ]

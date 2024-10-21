@@ -7,14 +7,18 @@ class ShipSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
 
     def get_image(self, ship):
-        return ship.image.url.replace("minio", "localhost", 1)
+        if ship.image:
+            return ship.image.url.replace("minio", "localhost", 1)
+
+        return "http://localhost:9000/images/default.png"
 
     class Meta:
         model = Ship
         fields = "__all__"
 
 
-class IcebreakerSerializer(serializers.ModelSerializer):
+
+class IcebreakersSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField()
     moderator = serializers.SerializerMethodField()
 
@@ -24,15 +28,15 @@ class IcebreakerSerializer(serializers.ModelSerializer):
     def get_moderator(self, icebreaker):
         if icebreaker.moderator:
             return icebreaker.moderator.username
-            
-        return ""
 
+        return ""
     class Meta:
         model = Icebreaker
-        fields = '__all__'
+        fields = "__all__"
 
 
-class IcebreakersSerializer(serializers.ModelSerializer):
+
+class IcebreakerSerializer(serializers.ModelSerializer):
     ships = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField()
     moderator = serializers.SerializerMethodField()
@@ -41,16 +45,16 @@ class IcebreakersSerializer(serializers.ModelSerializer):
         return icebreaker.owner.username
 
     def get_moderator(self, icebreaker):
-        if icebreaker.moderator:
-            return icebreaker.moderator.username
-
-    def get_ships(self, lecture):
-        items = ShipIcebreaker.objects.filter(lecture=lecture)
-        return [{**ShipSerializer(item.ship).data, "value": item.value} for item in items]
+        return icebreaker.moderator.username if icebreaker.moderator else ""
     
+
+    def get_specialists(self, icebreaker):
+        items = ShipIcebreaker.objects.filter(icebreaker=icebreaker)
+        return [{**ShipSerializer(item.ship).data, "value": item.value} for item in items]
+
     class Meta:
         model = Icebreaker
-        fields = "__all__"
+        fields = '__all__'
 
 
 class ShipIcebreakerSerializer(serializers.ModelSerializer):
@@ -62,13 +66,13 @@ class ShipIcebreakerSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'first_name', 'last_name', 'date_joined', 'password', 'username')
+        fields = ('email', 'username')
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'is_staff', 'is_superuser', 'username')
+        fields = ('email', 'password', 'username')
         write_only_fields = ('password',)
         read_only_fields = ('id',)
 
