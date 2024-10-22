@@ -29,7 +29,7 @@ def get_session_payload(token):
 def get_session(request):
     cookie = request.headers.get("Cookie")
 
-    if "session" in cookie:
+    if cookie is not None and "session" in cookie:
         return request.COOKIES.get('session')
 
     return cookie

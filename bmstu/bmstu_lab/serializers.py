@@ -48,9 +48,9 @@ class IcebreakerSerializer(serializers.ModelSerializer):
         return icebreaker.moderator.username if icebreaker.moderator else ""
     
 
-    def get_specialists(self, icebreaker):
+    def get_ships(self, icebreaker):
         items = ShipIcebreaker.objects.filter(icebreaker=icebreaker)
-        return [{**ShipSerializer(item.ship).data, "value": item.value} for item in items]
+        return [{**ShipSerializer(item.ship).data, "order": item.order} for item in items]
 
     class Meta:
         model = Icebreaker
