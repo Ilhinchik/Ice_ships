@@ -1,4 +1,3 @@
-import requests
 from django.core.files.storage import default_storage
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
