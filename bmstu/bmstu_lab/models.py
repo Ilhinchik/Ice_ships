@@ -48,6 +48,8 @@ class Icebreaker(models.Model):
     start_point = models.CharField(max_length=255, verbose_name="Начальная точка проводки", blank=True, null=True)
     finish_point = models.CharField(max_length=255, verbose_name="Конечная точка проводки", blank=True, null=True)
 
+    result = models.BooleanField(default=False, verbose_name="Результат проводки (0/1)")
+
     def __str__(self):
         return f"Проводка №{self.pk} от {self.date}"
 
@@ -59,6 +61,12 @@ class Icebreaker(models.Model):
     
     def get_status(self):
         return dict(self.STATUS_CHOICES).get(self.status)
+    
+    def update_result(self):
+        if self.status == 3:
+            ships = self.get_ships()
+            self.result = all(bool(ship.ice_class) for ship in ships)
+            self.save()
 
     class Meta:
         verbose_name = "Проводка"
@@ -70,7 +78,7 @@ class Icebreaker(models.Model):
 class ShipIcebreaker(models.Model):
     ship = models.ForeignKey(Ship, on_delete=models.DO_NOTHING, blank=True, verbose_name="Корабль")
     icebreaker = models.ForeignKey(Icebreaker, on_delete=models.DO_NOTHING, blank=True, verbose_name="Проводка")
-    order = models.CharField(max_length=50, verbose_name="Порядок", blank=True, null=True)
+    order = models.IntegerField (verbose_name="Порядок", blank=True, null=True)
 
     def __str__(self):
         return f"Связь корабль {self.ship.id} - проводка {self.icebreaker.id}"

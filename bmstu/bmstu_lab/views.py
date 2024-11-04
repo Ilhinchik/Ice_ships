@@ -6,6 +6,7 @@ from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.db import transaction
 
 from .serializers import *
 
@@ -233,6 +234,7 @@ def update_status_admin(request, icebreaker_id):
     icebreaker.date_complete = timezone.now()
     icebreaker.status = request_status
     icebreaker.moderator = get_moderator()
+    icebreaker.update_result()
     icebreaker.save()
 
     serializer = IcebreakerSerializer(icebreaker, many=False)
@@ -278,18 +280,44 @@ def delete_ship_from_icebreaker(request, icebreaker_id, ship_id):
     return Response(ships)
 
 
-@api_view(["PUT"]) # 1
+@api_view(["PUT"])
 def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(ship_id=ship_id, icebreaker_id=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    item = ShipIcebreaker.objects.get(ship_id=ship_id, icebreaker_id=icebreaker_id)
+    # Получаем текущую связь
+    current_item = ShipIcebreaker.objects.get(ship_id=ship_id, icebreaker_id=icebreaker_id)
+    current_order = current_item.order
 
-    serializer = ShipIcebreakerSerializer(item, data=request.data, many=False, partial=True)
+    # Проверяем направление обмена из данных запроса
+    direction = request.data.get("direction")
+    if direction not in ["up", "down"]:
+        return Response({"error": "Invalid direction"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if serializer.is_valid():
-        serializer.save()
+    # Определяем новое значение порядка для обмена
+    if direction == "up":
+        # Получаем соседний объект с порядком выше текущего
+        neighbor = ShipIcebreaker.objects.filter(
+            icebreaker_id=icebreaker_id, order__lt=current_order
+        ).order_by("-order").first()
+    elif direction == "down":
+        # Получаем соседний объект с порядком ниже текущего
+        neighbor = ShipIcebreaker.objects.filter(
+            icebreaker_id=icebreaker_id, order__gt=current_order
+        ).order_by("order").first()
 
+    if not neighbor:
+        # Если соседнего объекта нет, значит текущий объект уже в крайнем положении
+        return Response({"error": "Cannot move further in this direction"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Обмен значениями порядка
+    with transaction.atomic():
+        current_item.order, neighbor.order = neighbor.order, current_item.order
+        current_item.save()
+        neighbor.save()
+
+    # Возвращаем обновленные данные
+    serializer = ShipIcebreakerSerializer(current_item)
     return Response(serializer.data)
 
 

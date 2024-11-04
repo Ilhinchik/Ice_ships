@@ -25,9 +25,22 @@ class IcebreakerSerializer(serializers.ModelSerializer):
             return icebreaker.moderator.username
             
     def get_ships(self, icebreaker):
+        # Получаем связи ShipIcebreaker для текущей проводки
         items = ShipIcebreaker.objects.filter(icebreaker=icebreaker)
-        serializer = ShipSerializer([item.ship for item in items], many=True)
-        return serializer.data
+        
+        # Сериализуем каждый объект Ship и добавляем его порядок (order)
+        ships_with_order = []
+        for item in items:
+            ship_data = ShipSerializer(item.ship).data
+            ship_data['order'] = item.order  # Добавляем поле order
+            ships_with_order.append(ship_data)
+        
+        return ships_with_order
+    
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        instance.update_result()
+        return instance
 
     class Meta:
         model = Icebreaker
