@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     
     # DRF
     'rest_framework',
+    'rest_framework.authtoken',
 
     'bmstu_lab',
     'drf_yasg'
@@ -111,6 +112,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ]
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -137,24 +144,6 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SESSION_LIFETIME = timedelta(days=1)
-
-JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
-    "ALGORITHM": "HS256",
-    "SIGNING_KEY": "MY_SIGNING_KEY_123",
-}
-
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        },
-    }
-}
 
 
 
@@ -165,3 +154,6 @@ AWS_SECRET_ACCESS_KEY = 'minio124'
 AWS_S3_ENDPOINT_URL = "http://localhost:9000"
 AWS_S3_URL_PROTOCOL = "http:"
 AWS_S3_USE_SSL = False
+
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = 6379

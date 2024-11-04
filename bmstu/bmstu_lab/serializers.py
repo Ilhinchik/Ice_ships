@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 
 from .models import *
 
@@ -28,8 +29,25 @@ class IcebreakersSerializer(serializers.ModelSerializer):
     def get_moderator(self, icebreaker):
         if icebreaker.moderator:
             return icebreaker.moderator.username
+            
+    def get_ships(self, icebreaker):
+        # Получаем связи ShipIcebreaker для текущей проводки
+        items = ShipIcebreaker.objects.filter(icebreaker=icebreaker)
+        
+        # Сериализуем каждый объект Ship и добавляем его порядок (order)
+        ships_with_order = []
+        for item in items:
+            ship_data = ShipSerializer(item.ship).data
+            ship_data['order'] = item.order  # Добавляем поле order
+            ships_with_order.append(ship_data)
+        
+        return ships_with_order
+    
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        instance.update_result()
+        return instance
 
-        return ""
     class Meta:
         model = Icebreaker
         fields = "__all__"
@@ -66,28 +84,24 @@ class ShipIcebreakerSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'username')
-
-
-class UserRegisterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'password', 'username')
-        write_only_fields = ('password',)
-        read_only_fields = ('id',)
+        fields = ['id', 'username', 'email', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create(
-            email=validated_data['email'],
-            username=validated_data['username']
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            email=validated_data.get('email', '')
         )
-
-        user.set_password(validated_data['password'])
-        user.save()
-
         return user
 
-
-class UserLoginSerializer(serializers.Serializer):
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get('email', instance.email)
+        if 'password' in validated_data:
+            instance.set_password(validated_data['password'])
+        instance.save()
+        return instance
+    
+class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
