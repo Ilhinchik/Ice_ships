@@ -9,7 +9,7 @@ class ShipSerializer(serializers.ModelSerializer):
 
     def get_image(self, ship):
         if ship.image:
-            return ship.image.url.replace("minio", "localhost", 1)
+            return ship.image.replace("minio", "localhost", 1)
 
         return "http://localhost:9000/images/default.png"
 

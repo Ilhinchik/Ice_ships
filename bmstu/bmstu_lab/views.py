@@ -1,4 +1,3 @@
-import requests
 import os
 import uuid
 from dateutil.parser import parse
@@ -16,6 +15,8 @@ from .auth import AuthBySessionID, AuthBySessionIDIfExists, IsAuth, IsManagerAut
 from .redis import session_storage
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from drf_yasg import openapi
+from .minio import MinioStorage
+from bmstu import settings
 
 from .serializers import *
 
@@ -50,6 +51,7 @@ def get_draft_icebreaker(request):
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@authentication_classes([AuthBySessionIDIfExists])
 def search_ships(request):
     ship_name = request.GET.get("ship_name", "")
 
@@ -125,6 +127,7 @@ def update_ship(request, ship_id):
                      })
 @api_view(["POST"])
 @permission_classes([IsManagerAuth])
+@parser_classes([MultiPartParser, JSONParser])
 def create_ship(request):
 
     serializer = ShipSerializer(data=request.data)
@@ -195,7 +198,7 @@ def add_ship_to_icebreaker(request, ship_id):
 @swagger_auto_schema(method="post",
                      manual_parameters=[
                          openapi.Parameter(name="image",
-                                           in_=openapi.IN_QUERY,
+                                           in_=openapi.IN_FORM,
                                            type=openapi.TYPE_FILE,
                                            required=True, description="Image")],
                      responses={
@@ -205,20 +208,32 @@ def add_ship_to_icebreaker(request, ship_id):
                      })
 @api_view(["POST"])
 @permission_classes([IsManagerAuth])
+@parser_classes([MultiPartParser])
 def update_ship_image(request, ship_id):
-    if not Ship.objects.filter(pk=ship_id).exists():
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    ship = Ship.objects.filter(id=ship_id, status=1).first()
+    if ship is None:
+        return Response("Ship not found", status=status.HTTP_404_NOT_FOUND)
 
-    ship = Ship.objects.get(pk=ship_id)
+    minio_storage = MinioStorage(endpoint=settings.MINIO_ENDPOINT_URL,
+                                 access_key=settings.MINIO_ACCESS_KEY,
+                                 secret_key=settings.MINIO_SECRET_KEY,
+                                 secure=settings.MINIO_SECURE)
+    
+    file = request.FILES.get("image")
+    if not file:
+        return Response(f"No image in request. Request contains: {request.FILES}", status=status.HTTP_400_BAD_REQUEST)
 
-    image = request.data.get("image")
-    if image is not None:
-        ship.image = image
-        ship.save()
+    file_extension = os.path.splitext(file.name)[1]
+    file_name = f"{ship_id}{file_extension}"
 
-    serializer = ShipSerializer(ship)
+    try:
+        minio_storage.load_file(settings.MINIO_BUCKET_NAME, file_name, file)
+    except Exception as e:
+        return Response(f"Failed to load image: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return Response(serializer.data)
+    ship.image = f"http://{settings.MINIO_ENDPOINT_URL}/{settings.MINIO_BUCKET_NAME}/{file_name}"
+    ship.save()
+    return Response(status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(method='get',
@@ -485,38 +500,30 @@ def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
     if not ShipIcebreaker.objects.filter(ship_id=ship_id, icebreaker_id=icebreaker_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    # Получаем текущую связь
     current_item = ShipIcebreaker.objects.get(ship_id=ship_id, icebreaker_id=icebreaker_id)
     current_order = current_item.order
 
-    # Проверяем направление обмена из данных запроса
     direction = request.data.get("direction")
     if direction not in ["up", "down"]:
         return Response({"error": "Invalid direction"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Определяем новое значение порядка для обмена
+    
     if direction == "up":
-        # Получаем соседний объект с порядком выше текущего
         neighbor = ShipIcebreaker.objects.filter(
             icebreaker_id=icebreaker_id, order__lt=current_order
         ).order_by("-order").first()
     elif direction == "down":
-        # Получаем соседний объект с порядком ниже текущего
         neighbor = ShipIcebreaker.objects.filter(
             icebreaker_id=icebreaker_id, order__gt=current_order
         ).order_by("order").first()
 
     if not neighbor:
-        # Если соседнего объекта нет, значит текущий объект уже в крайнем положении
         return Response({"error": "Cannot move further in this direction"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Обмен значениями порядка
     with transaction.atomic():
         current_item.order, neighbor.order = neighbor.order, current_item.order
         current_item.save()
         neighbor.save()
 
-    # Возвращаем обновленные данные
     serializer = ShipIcebreakerSerializer(current_item)
     return Response(serializer.data)
 
@@ -529,7 +536,6 @@ def update_ship_in_icebreaker(request, icebreaker_id, ship_id):
         status.HTTP_400_BAD_REQUEST: "Bad Request",
     }
 )
-@parser_classes([JSONParser])
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login(request):
@@ -563,6 +569,7 @@ def login(request):
                          status.HTTP_400_BAD_REQUEST: "Bad Request",
                      })
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def register(request):
     serializer = UserSerializer(data=request.data)
 

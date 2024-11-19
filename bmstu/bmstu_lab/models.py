@@ -15,7 +15,7 @@ class Ship(models.Model):
     length = models.FloatField(verbose_name="Длина", blank=True, null=True)
     engine = models.CharField(max_length=255, verbose_name="Двигатель", blank=True)
     status = models.IntegerField(choices=STATUS_CHOICES, default=1, verbose_name="Статус")
-    image = models.ImageField(verbose_name="Изображение", null=True, blank=True, default="images/default.png")
+    image = models.CharField(verbose_name="Изображение", null=True, blank=True, default="images/default.png")
     description = models.TextField(verbose_name="Описание", blank=True)
 
     def __str__(self):
@@ -48,7 +48,7 @@ class Icebreaker(models.Model):
     start_point = models.CharField(max_length=255, verbose_name="Начальная точка проводки", blank=True, null=True)
     finish_point = models.CharField(max_length=255, verbose_name="Конечная точка проводки", blank=True, null=True)
 
-    result = models.BooleanField(default=False, verbose_name="Результат проводки (0/1)")
+    result = models.BooleanField(default=False, verbose_name="Результат проводки (0/1)", null=True)
 
     def __str__(self):
         return f"Проводка №{self.pk} от {self.date}"

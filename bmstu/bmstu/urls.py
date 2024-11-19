@@ -48,7 +48,7 @@ urlpatterns = [
     path('api/ships/create/', create_ship),  # POST
     path('api/ships/<int:ship_id>/add_to_icebreaker/', add_ship_to_icebreaker),  # POST
 
-    # Набор методов для заявок
+    # Набор методов для заявок  
     path('api/icebreakers/', search_icebreakers),  # GET
     path('api/icebreakers/<int:icebreaker_id>/', get_icebreaker_by_id),  # GET
     path('api/icebreakers/<int:icebreaker_id>/update/', update_icebreaker),  # PUT
@@ -57,7 +57,6 @@ urlpatterns = [
     path('api/icebreakers/<int:icebreaker_id>/delete/', delete_icebreaker),  # DELETE
 
     # Набор методов для м-м
-    path('api/lectures/<int:lecture_id>/specialists/<int:specialist_id>/', get_ship_icebreaker),  # GET
     path('api/icebreakers/<int:icebreaker_id>/update_ship/<int:ship_id>/', update_ship_in_icebreaker),  # PUT
     path('api/icebreakers/<int:icebreaker_id>/delete_ship/<int:ship_id>/', delete_ship_from_icebreaker),  # DELETE
 
