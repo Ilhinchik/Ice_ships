@@ -1,0 +1,41 @@
+{% load static %}
+
+{% if "http://localhost:8000/icebreaker/" in request.build_absolute_uri or "http://127.0.0.1:8000/icebreaker" in request.build_absolute_uri %}
+
+<div class="ship-card">
+    <img src="{{ ship.image }}" alt="{{ ship.ship_name }}" class="ship-image">
+    <div class="ship-info">
+      <h3>{{ ship.ship_name }}</h3>
+      <div class="comment-group">
+        <label for="comment-{{ ship.id }}">Позиция:</label>
+        {% if ship.order %}
+        <input type="text"  placeholder="Введите порядок" class="comment-input" value="{{ ship.order }}">
+        {% else %}
+        <input type="text"  placeholder="Введите порядок" class="comment-input">
+        {% endif %}
+      </div>
+      <button class="details-button" onclick="window.location.href='{% url 'ship' ship.id %}'">Подробнее</button>
+    </div>
+  </div>
+  
+{% else %}
+  
+<div class="ship-card">
+    <img src="{{ ship.image }}" alt="{{ ship.ship_name }}" class="ship-image">
+    <div class="ship-info">
+        <h3>{{ ship.ship_name }}</h3>
+        <p>Год изготовления: {{ ship.year }}</p>
+        <p>Ледовый класс: {{ ship.ice_class }}</p>
+        <div class="button-group">
+            <a href="{% url 'ship' ship.id %}">
+                <button class="details-button">Подробнее</button>
+            </a>
+            <form method="post" action="{% url 'add_ship_to_draft_icebreaker' ship.id %}" class="add-ship-form">
+                {% csrf_token %}
+                <button class="details-button" type="submit">Добавить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+  {% endif %}

@@ -1,0 +1,13 @@
+{% load static %}
+
+{% if ships_count > 0 %}
+<a href="{% url 'icebreaker' draft_icebreaker.id %}">
+    <img src="http://127.0.0.1:9000/image/folder.png" alt="Files">
+    <span class="file-counter">{{ ships_count }}</span>
+</a>
+{% else %}
+
+    <img src="http://127.0.0.1:9000/image/folder.png" alt="Files">
+    <span class="file-counter">0</span>
+
+{% endif %}

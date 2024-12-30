@@ -1,0 +1,43 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/examp.css' %}">
+
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Транспортные корабли ледового класса</title>
+</head>
+<body>
+
+  <header class="header">
+    <a href="{% url 'home' %}" class="home-button">
+      <img src="http://127.0.0.1:9000/image/home.png" alt="Home">
+    </a>
+  </header>
+
+  <div class="uheader">
+    <div class="header-title"><strong>Транспортные корабли ледового класса</strong></div>
+    <div class="file-button">
+      {% include "bin.html" %}
+    </div>
+  </div>
+
+  <div class="search-container">
+    <form method="GET" action="{% url 'home' %}">
+      <input type="text" name="ship_name" placeholder="Найти" class="search-box" value="{{ ship_name }}">
+      <button type="submit" class="search-button">Найти</button>
+    </form>
+  </div>
+
+  <main class="ship-list">
+    {% for ship in ships %}
+      
+
+      {% include "ship_card.html" %}
+    {% endfor %}
+  </main>
+  
+
+</body>
+</html>

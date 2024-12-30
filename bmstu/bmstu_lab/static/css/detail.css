@@ -1,0 +1,78 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0D6AAD;
+    padding: 19px 20px;
+    color: white;
+}
+
+.header .home-icon img {
+    height: 19px;
+    cursor: pointer;
+}
+
+.home-button img {
+    height: 30px;
+}
+
+
+.ship-detail-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 50px;
+    background-color: white;
+}
+
+.ship-card {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 10px;
+    padding: 30px;
+    width: 70%; 
+    max-width: 1000px;
+}
+
+.ship-title {
+    font-size: 32px;
+    margin-bottom: 20px;
+    text-align: left; 
+}
+
+.ship-image-info {
+    display: flex;
+    flex-direction: row; 
+    width: 100%;
+    align-items: flex-start;
+}
+
+.ship-image {
+    max-width: 430px;
+    height: auto;
+    margin-right: 30px;
+}
+
+.ship-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    text-align: left;
+    max-width: 100%;
+}
+
+.ship-info p {
+    font-size: 18px;
+    color: black;
+    margin: 5px 0;
+    line-height: 1.6;
+}

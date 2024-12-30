@@ -1,0 +1,78 @@
+{% load static %}
+
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Составление заявки</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/request.css' %}"> 
+</head>
+<body>
+
+  <header class="header">
+    <div class="home-icon home-button">
+      <a href="{% url 'home' %}">
+        <img src="http://127.0.0.1:9000/image/home.png" alt="Home">
+      </a>
+    </div>
+  </header>
+
+  <div class="request-container">
+    <h1>Составление заявки на проводку ледоколом</h1>
+    {% if icebreaker.status == 5 %}
+
+    <h1>Заявка удалена</h1>
+
+    {% else %}
+    <!-- Форма для выбора данных -->
+    <form>
+      {% csrf_token %}
+      <div class="info">
+        <div class="input-group">
+          <label for="start-point">Дата:</label>
+          {% if icebreaker.date %}
+              <input class="form-control" type="date" id="date" value="{{ icebreaker.date|date:'Y-m-d' }}" name="date" >
+          {% else %}
+              <input class="form-control" type="date" id="date" name="date" >
+          {% endif %}
+        </div>
+
+        <div class="input-group">
+          <label for="start-point">Начальная точка проводки:</label>
+          {% if icebreaker.start_point %}
+          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" value="{{ icebreaker.start_point }}" >
+          {% else %}
+          <input class="form-control" type="text" placeholder="Выбрать начальную точку проводки" >
+          {% endif %}
+        </div>
+
+        <div class="input-group">
+          <label for="end-point">Конечная точка проводки:</label>
+          {% if icebreaker.finish_point %}
+          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" value="{{ icebreaker.finish_point }}" >
+          {% else %}
+          <input class="form-control" type="text" placeholder="Выбрать конечную точку проводки" >
+          {% endif %}
+        </div>
+
+        <!-- Кнопка для удаления заявки -->
+        <div class="centered-button">
+          <button class="btn delete-draft-lecture-btn" type="submit" formaction="{% url 'delete_icebreaker' icebreaker.id %}">Удалить</button>
+        </div>
+
+      </div>
+    </form>
+
+    <h2>Корабли в заявке</h2>
+    <div class="ship-list">
+      {% for ship in icebreaker.get_ships %}
+      {% include "ship_card.html" %}
+      {% endfor %}
+    </div>
+
+    {% endif %}
+  </div>
+
+</body>
+</html>

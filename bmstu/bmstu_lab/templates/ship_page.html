@@ -1,0 +1,41 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ship.ship_name }}</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/detail.css' %}">
+</head>
+<body>
+
+
+  <header class="header">
+    <div class="home-icon home-button">
+      <a href="{% url 'home' %}">
+        <img src="http://127.0.0.1:9000/image/home.png" alt="Home">
+      </a>
+    </div>
+  </header>
+
+  <div class="ship-detail-container">
+    <div class="ship-card">
+
+      <h1 class="ship-title">{{ ship.ship_name }}</h1>
+      
+      <div class="ship-image-info">
+        <img src="{{ ship.image }}" alt="{{ ship.ship_name }}" class="ship-image">
+        <div class="ship-info">
+          <p> {{ ship.description }}</p>
+          <p>Год изготовления: {{ ship.year }}</p>
+          <p>Ледовый класс: {{ ship.ice_class }}</p>
+          <p>Длина: {{ ship.length }} м</p>
+          <p>Двигатель: {{ ship.engine }}</p>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+</body>
+</html>

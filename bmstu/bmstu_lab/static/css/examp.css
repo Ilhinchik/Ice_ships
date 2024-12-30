@@ -1,0 +1,148 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px; /* Отступ между кнопками */
+}
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0D6AAD;
+    padding: 21px 20px;
+    color: white;
+}
+
+.home-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.home-button img {
+    height: 19px;
+}
+
+.uheader {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    color: black;
+    margin: 20px 0 10px;
+    position: relative; /* Обновлено для правильного позиционирования folder */
+}
+
+.header-title {
+    font-size: 32px;
+}
+
+.file-button {
+    position: absolute;
+    right: 0; /* Значок folder будет выровнен справа */
+    top: 0;
+    margin-right: 20px; /* Отступ от правого края */
+    cursor: pointer;
+}
+
+.file-button img {
+    width: 40px; /* Устанавливаем размер иконки */
+    height: 40px;
+}
+
+
+.search-container {
+    padding: 20px;
+    text-align: center;
+}
+
+.search-box {
+    padding: 10px;
+    width: 800px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.search-button {
+    padding: 10px 20px;
+    background-color: #0D6AAD;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.search-button:hover {
+    background-color: #0056b3;
+}
+
+.ship-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ship-card {
+    display: flex;
+    background-color: #F1F1F1;
+    border-radius: 8px;
+    margin: 10px;
+    padding: 10px;
+    width: 50%;
+}
+
+.ship-image {
+    max-width: 200px;
+    margin-right: 20px;
+}
+
+.ship-info {
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ship-info h3 {
+    margin: 0 0 10px;
+}
+
+.details-button {
+    padding: 10px 20px;
+    background-color: #0D6AAD;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.details-button:hover {
+    background-color: #0056b3;
+}
+
+
+
+.file-counter {
+    position: absolute;
+    top: -3px; /* Смещение вверх для позиционирования */
+    right: 28px; /* Смещение вправо */
+    width: 20px;
+    height: 20px;
+    background-color: white; /* Красный цвет */
+    border-radius: 50%; /* Круглая форма */
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: bold;
+    border: 1px solid black;
+}
