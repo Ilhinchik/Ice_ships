@@ -1,3 +1,4 @@
+import requests
 import os
 import uuid
 from dateutil.parser import parse
@@ -271,8 +272,8 @@ def search_icebreakers(request):
         "formation_start")
     formation_datetime_end_filter = request.query_params.get("formation_end")
 
-    filters = ~Q(status=Icebreaker.RequestStatus.DELETED) & ~Q(
-        status=Icebreaker.RequestStatus.DRAFT)
+    filters = ~Q(status=Icebreaker.RequestStatus.DELETED)  # & ~Q(
+    #     status=Icebreaker.RequestStatus.DRAFT)
     if status_filter is not None:
         filters &= Q(status=status_filter.upper())
     if formation_datetime_start_filter is not None:
@@ -386,7 +387,27 @@ def update_status_user(request, icebreaker_id):
 
     icebreaker.status = Icebreaker.RequestStatus.FORMED
     icebreaker.date_formation = datetime.now()
-    icebreaker.save()
+    # Отправка запроса на асинхронный сервис
+    url = 'http://127.0.0.1:8100/api/async_calc/'
+    data = {
+        'icebreaker_id': icebreaker_id,
+    }
+    try:
+        response = requests.post(url, json=data)
+
+        # if response.status_code == 200:
+        #     # Получаем результат от асинхронного сервиса
+        #     result_data = response.json().get('data', {})
+        #     icebreaker.result = result_data.get('result', False)
+        # else:
+        #     icebreaker.result = False  # В случае ошибки устанавливаем результат в False
+
+        icebreaker.save()
+    except Exception as error:
+        print(f"Error during async request: {error}")
+        # icebreaker.result = False
+        icebreaker.save()
+
     serializer = IcebreakerSerializer(icebreaker)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -422,11 +443,33 @@ def update_status_admin(request, icebreaker_id):
 
     icebreaker = Icebreaker.objects.get(id=icebreaker_id)
     icebreaker.date_complete = datetime.now()
-    if icebreaker.status == Icebreaker.RequestStatus.REJECTED:
-        icebreaker.result = False 
-    elif icebreaker.status == Icebreaker.RequestStatus.COMPLETED:
-        icebreaker.result = random.choice([True, False])
+    # if icebreaker.status == Icebreaker.RequestStatus.REJECTED:
+    #     icebreaker.result = False
+    # elif icebreaker.status == Icebreaker.RequestStatus.COMPLETED:
+    #     icebreaker.result = random.choice([True, False])
     icebreaker.moderator = request.user
+
+    # # Отправка запроса на асинхронный сервис
+    # url = 'http://127.0.0.1:8100/api/async_calc/'
+    # data = {
+    #     'icebreaker_id': icebreaker_id,
+    # }
+    # try:
+    #     response = requests.post(url, json=data)
+
+    #     # if response.status_code == 200:
+    #     #     # Получаем результат от асинхронного сервиса
+    #     #     result_data = response.json().get('data', {})
+    #     #     icebreaker.result = result_data.get('result', False)
+    #     # else:
+    #     #     icebreaker.result = False  # В случае ошибки устанавливаем результат в False
+
+    #     icebreaker.save()
+    # except Exception as error:
+    #     print(f"Error during async request: {error}")
+    #     # icebreaker.result = False
+    #     icebreaker.save()
+
     icebreaker.save()
 
     serializer = IcebreakerSerializer(icebreaker)
@@ -673,3 +716,34 @@ def update_user(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(method='put')
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def async_result(request):
+    """
+    Обработка асинхронного результата от Go-сервера
+    """
+    print(f"Async result data: {request.data}")
+    try:
+        json_data = request.data
+        const_token = 'icebreaker_secret_token'
+
+        if const_token != json_data.get('token'):
+            return Response(data={'message': 'Ошибка, токен не соответствует'}, status=status.HTTP_403_FORBIDDEN)
+
+        icebreaker_id = json_data.get('icebreaker_id')
+        result = json_data.get('result')
+
+        icebreaker = Icebreaker.objects.filter(id=icebreaker_id).first()
+        if icebreaker is None:
+            return Response("Icebreaker not found", status=status.HTTP_404_NOT_FOUND)
+
+        icebreaker.result = result
+        icebreaker.save()
+
+        return Response(data={'message': 'Результат успешно обновлен'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error in async_result: {e}")
+        return Response(data={'message': 'Ошибка обработки запроса'}, status=status.HTTP_400_BAD_REQUEST)

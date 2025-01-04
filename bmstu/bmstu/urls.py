@@ -72,4 +72,7 @@ urlpatterns = [
     path('api/users/login/', login),  # POST
     path('api/users/logout/', logout),  # POST
     path('api/users/update/', update_user),  # PUT
+    
+    # Асинхронный веб-сервис
+    path('api/async_result/', async_result),
 ]
