@@ -35,6 +35,13 @@ class Icebreaker(models.Model):
         COMPLETED = "COMPLETED"
         REJECTED = "REJECTED"
 
+    STATUS_RESULT = (
+        (0, 'Не удалось обратиться к асинхронному сервису'),
+        (1, 'В работе'),
+        (2, 'Успех'),
+        (3, 'Провал'),
+    )
+
     status = models.CharField(
         max_length=10,
         choices=RequestStatus.choices,
@@ -59,8 +66,8 @@ class Icebreaker(models.Model):
     finish_point = models.CharField(
         max_length=255, verbose_name="Конечная точка проводки", blank=True, null=True)
 
-    result = models.BooleanField(
-        verbose_name="Результат проводки (0/1)", null=True)
+    result = models.IntegerField(
+        verbose_name="Результат проводки (0/1)", null=True, choices=STATUS_RESULT)
 
     def __str__(self):
         return f"Проводка №{self.pk} от {self.date}"

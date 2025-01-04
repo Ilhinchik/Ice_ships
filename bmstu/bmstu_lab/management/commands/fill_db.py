@@ -57,7 +57,7 @@ def add_icebreakers(ratio, users):
             start_point="Точка А",
             finish_point="Точка Б",
             result=random.choice(
-                [True, False]) if status == "COMPLETED" else None,
+                [2, 3]) if status == "COMPLETED" else None,
         )
         for _ in range(ratio)
     ]

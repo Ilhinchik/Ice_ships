@@ -382,9 +382,6 @@ def update_status_user(request, icebreaker_id):
     if icebreaker.start_point is None or icebreaker.start_point == "":
         return Response("Icebreaker.start_point is empty", status=status.HTTP_400_BAD_REQUEST)
 
-    # if not is_valid_versions(pk):
-    #     return Response("One or more software versions is empty", status=status.HTTP_400_BAD_REQUEST)
-
     icebreaker.status = Icebreaker.RequestStatus.FORMED
     icebreaker.date_formation = datetime.now()
     # Отправка запроса на асинхронный сервис
@@ -395,18 +392,15 @@ def update_status_user(request, icebreaker_id):
     try:
         response = requests.post(url, json=data)
 
-        # if response.status_code == 200:
-        #     # Получаем результат от асинхронного сервиса
-        #     result_data = response.json().get('data', {})
-        #     icebreaker.result = result_data.get('result', False)
-        # else:
-        #     icebreaker.result = False  # В случае ошибки устанавливаем результат в False
+        if response.status_code == 200:
+            # Получаем результат от асинхронного сервиса
+            icebreaker.result = 1
+        else:
+            icebreaker.result = 0
 
         icebreaker.save()
     except Exception as error:
         print(f"Error during async request: {error}")
-        # icebreaker.result = False
-        icebreaker.save()
 
     serializer = IcebreakerSerializer(icebreaker)
     return Response(serializer.data, status=status.HTTP_200_OK)
