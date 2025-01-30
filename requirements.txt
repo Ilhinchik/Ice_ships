@@ -1,0 +1,9 @@
+Django==4.2.4
+django-cors-headers
+djangorestframework
+drf-yasg
+psycopg2-binary
+requests
+python-dateutil
+redis
+minio
