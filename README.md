@@ -17,5 +17,13 @@
 - **moderator**: завершение бэкенда для SPA, добавление авторизации через сессии, Swagger.
 - **user-int**: доработка бэкенда с интерфейсами пользователя и модератора на фронтенде
 
+### Стек технологий
+- Python
+- Django
+- Minio
+- Redis
+- Postgres
+- Swagger
+
 ### Ссылка на деплой
 https://ilhinchik.github.io/Ice_ships_frontend/
